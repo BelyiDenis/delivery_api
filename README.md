@@ -18,3 +18,24 @@ REST API для автоматизации обработки заявок на 
 ```bash
 git clone <your-repo-url>
 cd delivery_api
+
+# Посмотреть логи всех контейнеров
+docker-compose logs -f
+
+# Посмотреть логи только Django
+docker-compose logs -f django-api
+
+# Перезапустить контейнеры
+docker-compose restart
+
+# Остановить все контейнеры
+docker-compose down
+
+# Запустить снова
+docker-compose up -d
+
+# Зайти внутрь Django контейнера
+docker-compose exec django-api bash
+
+# Выполнить команду в Django
+docker-compose exec django-api python manage.py <command>

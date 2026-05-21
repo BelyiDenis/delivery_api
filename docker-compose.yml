@@ -1,0 +1,53 @@
+services:
+  postgres:
+    build: ./postgres
+    container_name: delivery_postgres
+    environment:
+      POSTGRES_DB: delivery_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres123
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5433:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  django-api:
+    build: .
+    container_name: delivery_api
+    environment:
+      DEBUG: 'False'
+      DB_NAME: delivery_db
+      DB_USER: postgres
+      DB_PASSWORD: postgres123
+      DB_HOST: postgres
+      DB_PORT: '5432'
+    volumes:
+      - static_files:/app/static
+      - media_files:/app/media
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - "8000:8000"
+
+  nginx:
+    build: ./nginx
+    container_name: delivery_nginx
+    volumes:
+      - static_files:/static
+      - media_files:/media
+    ports:
+      - "80:80"
+      - "443:443"
+    depends_on:
+      - django-api
+
+volumes:
+  postgres_data:
+  static_files:
+  media_files:
