@@ -17,6 +17,18 @@ from .models import DeliveryRequest
 from .serializers import DeliveryRequestSerializer
 from upd.models import UPD
 
+# Импорт декоратора для логирования (если реализован)
+try:
+    from notifications.decorators import log_action
+    LOGGING_ENABLED = True
+except ImportError:
+    # Если декоратор не реализован, создаём заглушку
+    def log_action(action):
+        def decorator(func):
+            return func
+        return decorator
+    LOGGING_ENABLED = False
+
 
 class DeliveryRequestViewSet(viewsets.ModelViewSet):
     queryset = DeliveryRequest.objects.all()
@@ -34,6 +46,7 @@ class DeliveryRequestViewSet(viewsets.ModelViewSet):
             return DeliveryRequest.objects.filter(id_driver__id_user=user)
         return DeliveryRequest.objects.all()
 
+    @log_action('CREATE')
     def create(self, request, *args, **kwargs):
         """
         Сиквенс №4: создание заявки на основе УПД.
@@ -47,6 +60,11 @@ class DeliveryRequestViewSet(viewsets.ModelViewSet):
         except UPD.DoesNotExist:
             return Response({'error': 'UPD not found'}, status=status.HTTP_404_NOT_FOUND)
 
+        # Проверка, что заявка с таким УПД ещё не создана
+        if DeliveryRequest.objects.filter(id_upd=upd).exists():
+            return Response({'error': 'Заявка для этого УПД уже существует'},
+                            status=status.HTTP_400_BAD_REQUEST)
+
         delivery_request = DeliveryRequest.objects.create(
             number_delivery_request=f'З-{upd.id_upd}',
             id_upd=upd,
@@ -55,6 +73,21 @@ class DeliveryRequestViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(delivery_request)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
+    @log_action('UPDATE')
+    def update(self, request, *args, **kwargs):
+        """
+        Сиквенс №6: полное обновление заявки.
+        """
+        return super().update(request, *args, **kwargs)
+
+    @log_action('UPDATE')
+    def partial_update(self, request, *args, **kwargs):
+        """
+        Сиквенс №6: частичное обновление заявки.
+        """
+        return super().partial_update(request, *args, **kwargs)
+
+    @log_action('UPDATE')
     @action(detail=True, methods=['patch'], url_path='assign-driver')
     def assign_driver(self, request, pk=None):
         """
@@ -65,6 +98,12 @@ class DeliveryRequestViewSet(viewsets.ModelViewSet):
                             status=status.HTTP_403_FORBIDDEN)
 
         delivery = self.get_object()
+
+        # Проверка, что заявка ещё не закрыта
+        if delivery.status == 'completed':
+            return Response({'error': 'Нельзя назначить водителя на закрытую заявку'},
+                            status=status.HTTP_400_BAD_REQUEST)
+
         driver_id = request.data.get('id_driver')
         license_plate = request.data.get('vehicle_license_plate')
 
@@ -80,6 +119,17 @@ class DeliveryRequestViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(delivery)
         return Response(serializer.data)
 
+    @log_action('DELETE')
+    def destroy(self, request, *args, **kwargs):
+        """
+        Удаление заявки (только для администратора).
+        """
+        if request.user.role != 'admin':
+            return Response({'error': 'Только администратор может удалять заявки'},
+                            status=status.HTTP_403_FORBIDDEN)
+        return super().destroy(request, *args, **kwargs)
+
+    @log_action('UPDATE')
     @action(detail=True, methods=['post'], url_path='close')
     def close(self, request, pk=None):
         """
@@ -91,6 +141,16 @@ class DeliveryRequestViewSet(viewsets.ModelViewSet):
                             status=status.HTTP_403_FORBIDDEN)
 
         delivery = self.get_object()
+
+        # Проверка, что заявка ещё не закрыта
+        if delivery.status == 'completed':
+            return Response({'error': 'Заявка уже закрыта'},
+                            status=status.HTTP_400_BAD_REQUEST)
+
+        # Проверка, что заявка подписана (статус должен быть 'signed')
+        if delivery.status != 'signed':
+            return Response({'error': 'Заявка ещё не подписана. Сначала подпишите заявку.'},
+                            status=status.HTTP_400_BAD_REQUEST)
 
         # Проверка наличия подписей
         from signatures.models import ElectronicSignature
