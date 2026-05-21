@@ -6,8 +6,8 @@ ViewSet приложения delivery_requests (контроллеры в сик
 №4 - Заявка (создание) - POST /api/v1/delivery-requests/
 №5 - Заявка (детали) - GET /api/v1/delivery-requests/{id}/
 №6 - Заявка (обновление) - PATCH /api/v1/delivery-requests/{id}/
-№7 - Заявка (назначение водителя) - PATCH /api/v1/dispatcher/delivery-requests/{id}/assign-driver/
-№8 - Заявка (закрытие) - POST /api/v1/dispatcher/delivery-requests/{id}/close/
+№7 - Заявка (назначение водителя) - PATCH /api/v1/delivery-requests/{id}/assign-driver/
+№8 - Заявка (закрытие) - POST /api/v1/delivery-requests/{id}/close/
 """
 
 from rest_framework import viewsets, permissions, status
@@ -19,9 +19,6 @@ from upd.models import UPD
 
 
 class DeliveryRequestViewSet(viewsets.ModelViewSet):
-    """
-    ViewSet для работы с заявками на доставку.
-    """
     queryset = DeliveryRequest.objects.all()
     serializer_class = DeliveryRequestSerializer
     permission_classes = [permissions.IsAuthenticated]
@@ -58,15 +55,11 @@ class DeliveryRequestViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(delivery_request)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
-    # Сиквенс №5: retrieve (наследуется от ModelViewSet)
-    # Сиквенс №6: update/partial_update (наследуется от ModelViewSet)
-
     @action(detail=True, methods=['patch'], url_path='assign-driver')
     def assign_driver(self, request, pk=None):
         """
         Сиквенс №7: назначение водителя на заявку (только для диспетчера).
         """
-        # Проверка прав доступа
         if request.user.role != 'dispatcher':
             return Response({'error': 'Только диспетчер может назначать водителя'},
                             status=status.HTTP_403_FORBIDDEN)
@@ -79,13 +72,10 @@ class DeliveryRequestViewSet(viewsets.ModelViewSet):
             return Response({'error': 'id_driver и vehicle_license_plate обязательны'},
                             status=status.HTTP_400_BAD_REQUEST)
 
-        # Обновление заявки
         delivery.id_driver_id = driver_id
         delivery.vehicle_license_plate_id = license_plate
         delivery.status = 'driver_assigned'
         delivery.save()
-
-        # TODO: Отправка push-уведомления водителю
 
         serializer = self.get_serializer(delivery)
         return Response(serializer.data)
@@ -96,37 +86,31 @@ class DeliveryRequestViewSet(viewsets.ModelViewSet):
         Сиквенс №8: закрытие заявки (только для диспетчера).
         Проверяет наличие подписей и фото перед закрытием.
         """
-        # Проверка прав доступа
         if request.user.role != 'dispatcher':
             return Response({'error': 'Только диспетчер может закрывать заявки'},
                             status=status.HTTP_403_FORBIDDEN)
 
         delivery = self.get_object()
 
-        # Проверка наличия подписей (сиквенс №17)
+        # Проверка наличия подписей
         from signatures.models import ElectronicSignature
         has_driver_sig = ElectronicSignature.objects.filter(
-            id_delivery_request=delivery,
-            signer_type='driver',
-            verification_status='success'
+            id_delivery_request=delivery, signer_type='driver', verification_status='success'
         ).exists()
         has_client_sig = ElectronicSignature.objects.filter(
-            id_delivery_request=delivery,
-            signer_type='client',
-            verification_status='success'
+            id_delivery_request=delivery, signer_type='client', verification_status='success'
         ).exists()
 
         if not has_driver_sig or not has_client_sig:
             return Response({'error': 'Отсутствует подпись клиента'},
                             status=status.HTTP_400_BAD_REQUEST)
 
-        # Проверка наличия фото (сиквенс №15)
+        # Проверка наличия фото
         from photos.models import ProductPhoto
         if not ProductPhoto.objects.filter(id_delivery_request=delivery).exists():
             return Response({'error': 'Отсутствуют фото груза'},
                             status=status.HTTP_400_BAD_REQUEST)
 
-        # Закрытие заявки
         delivery.status = 'completed'
         delivery.save()
 

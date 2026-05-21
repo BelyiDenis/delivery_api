@@ -17,9 +17,6 @@ from delivery_requests.models import DeliveryRequest
 
 
 class ProductPhotoViewSet(viewsets.ModelViewSet):
-    """
-    ViewSet для работы с фото товара.
-    """
     queryset = ProductPhoto.objects.all()
     serializer_class = ProductPhotoSerializer
     permission_classes = [permissions.IsAuthenticated]
@@ -28,7 +25,6 @@ class ProductPhotoViewSet(viewsets.ModelViewSet):
         """
         Сиквенс №14: загрузка фото груза (только для водителя).
         """
-        # Проверка прав доступа
         if request.user.role != 'driver':
             return Response({'error': 'Только водитель может загружать фото'},
                             status=status.HTTP_403_FORBIDDEN)
@@ -40,13 +36,9 @@ class ProductPhotoViewSet(viewsets.ModelViewSet):
             return Response({'error': 'photo_file и id_delivery_request обязательны'},
                             status=status.HTTP_400_BAD_REQUEST)
 
-        # Сохранение файла на сервере
         file_path = default_storage.save(
-            f'photos/request_{request_id}_{photo_file.name}',
-            ContentFile(photo_file.read())
-        )
+            f'photos/request_{request_id}_{photo_file.name}', ContentFile(photo_file.read()))
 
-        # Создание записи в БД
         photo = ProductPhoto.objects.create(
             id_delivery_request_id=request_id,
             photo_file_path=file_path

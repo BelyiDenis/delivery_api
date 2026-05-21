@@ -15,7 +15,7 @@ SECRET_KEY = 'django-insecure-8x5f7q2w9e3r4t6y1u2i3o4p5a6s7d8f9g0h1j2k3l'
 DEBUG = True
 
 # Разрешённые хосты
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 
 # Установленные приложения
 INSTALLED_APPS = [
@@ -127,6 +127,7 @@ SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(hours=24),
     'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
     'AUTH_HEADER_TYPES': ('Bearer',),
+    'USER_ID_FIELD': 'id',  # JWT будет использовать поле id
 }
 
 # CORS настройки (для разработки)

@@ -19,10 +19,8 @@ from delivery_requests.serializers import DeliveryRequestSerializer
 
 class DriverViewSet(viewsets.ReadOnlyModelViewSet):
     """
-    ViewSet для работы с водителями (только чтение).
-    Доступ: диспетчер и администратор.
-
     Сиквенс №11: GET /api/v1/drivers/ - список всех водителей
+    Доступ: диспетчер и администратор.
     """
     queryset = Driver.objects.all()
     serializer_class = DriverSerializer
@@ -48,9 +46,8 @@ class DriverViewSet(viewsets.ReadOnlyModelViewSet):
 
 class AdminUserViewSet(viewsets.ModelViewSet):
     """
-    ViewSet для управления пользователями (только для администратора).
-
     Сиквенс №23: POST /api/v1/admin/users/ - создание пользователя
+    Доступ: только администратор.
     """
     queryset = User.objects.all()
     serializer_class = UserSerializer
@@ -63,10 +60,7 @@ class AdminUserViewSet(viewsets.ModelViewSet):
         return super().get_permissions()
 
     def create(self, request, *args, **kwargs):
-        """
-        Создание нового пользователя с хешированием пароля.
-        Проверка уникальности телефона.
-        """
+        """Создание нового пользователя с хешированием пароля"""
         phone = request.data.get('phone')
 
         # Проверка на дубликат телефона
@@ -86,9 +80,8 @@ class AdminUserViewSet(viewsets.ModelViewSet):
 
 class CurrentUserViewSet(viewsets.ViewSet):
     """
-    ViewSet для получения информации о текущем авторизованном пользователе.
-
     Сиквенс №22: GET /api/v1/users/me/
+    Получение информации о текущем авторизованном пользователе.
     """
     permission_classes = [permissions.IsAuthenticated]
 

@@ -1,3 +1,7 @@
+"""
+Главный файл маршрутизации URL
+"""
+
 from django.contrib import admin
 from django.urls import path, include
 from django.conf import settings
@@ -7,11 +11,14 @@ from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+
+    # Swagger документация API
     path('api/schema/', SpectacularAPIView.as_view(), name='schema'),
     path('api/docs/', SpectacularSwaggerView.as_view(url_name='schema'),
          name='swagger-ui'),
 
-    # JWT аутентификация
+    # Сиквенс №20: Токен (получение) - POST /api/v1/auth/token/
+    # Сиквенс №21: Токен (обновление) - POST /api/v1/auth/token/refresh/
     path('api/v1/auth/token/', TokenObtainPairView.as_view(),
          name='token_obtain_pair'),
     path('api/v1/auth/token/refresh/',

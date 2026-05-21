@@ -1,7 +1,3 @@
-"""
-Сериализатор приложения delivery_requests (граничный класс в сиквенсах)
-"""
-
 from rest_framework import serializers
 from .models import DeliveryRequest
 
@@ -18,7 +14,6 @@ class DeliveryRequestSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
     def get_upd_details(self, obj):
-        """Получение данных из связанного УПД"""
         if obj.id_upd:
             return {
                 'number_upd': obj.id_upd.number_upd,
@@ -31,7 +26,6 @@ class DeliveryRequestSerializer(serializers.ModelSerializer):
         return None
 
     def get_driver_details(self, obj):
-        """Получение данных о водителе"""
         if obj.id_driver:
             return {
                 'id_driver': obj.id_driver.id_driver,
@@ -41,7 +35,6 @@ class DeliveryRequestSerializer(serializers.ModelSerializer):
         return None
 
     def get_vehicle_details(self, obj):
-        """Получение данных о транспортном средстве"""
         if obj.vehicle_license_plate:
             return {
                 'license_plate': obj.vehicle_license_plate.license_plate,

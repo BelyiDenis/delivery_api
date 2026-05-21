@@ -1,10 +1,8 @@
 from rest_framework import serializers
-from .models import Waybill, ClosedDeliveryRequest
+from .models import Waybill
 
 
 class WaybillSerializer(serializers.ModelSerializer):
-    """Сериализатор для путевого листа с дополнительными данными"""
-
     delivery_request_number = serializers.SerializerMethodField()
     driver_details = serializers.SerializerMethodField()
     vehicle_details = serializers.SerializerMethodField()
@@ -36,9 +34,3 @@ class WaybillSerializer(serializers.ModelSerializer):
             'distance_km': obj.id_route.distance_km,
             'planned_duration_minutes': obj.id_route.planned_duration_minutes,
         }
-
-
-class ClosedDeliveryRequestSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = ClosedDeliveryRequest
-        fields = '__all__'

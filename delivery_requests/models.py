@@ -1,6 +1,5 @@
 """
 Модель приложения delivery_requests: заявка на доставку
-
 Соответствует инфологической модели: таблица Заявка на доставку
 """
 
@@ -25,20 +24,17 @@ class DeliveryRequest(models.Model):
     ]
 
     id_delivery_request = models.AutoField(primary_key=True)
-    number_delivery_request = models.CharField(
-        max_length=20, unique=True)  # Уникальный номер заявки
+    number_delivery_request = models.CharField(max_length=20, unique=True)
     id_upd = models.ForeignKey(
-        UPD, on_delete=models.RESTRICT, db_column='id_upd')  # Ссылка на УПД
+        UPD, on_delete=models.RESTRICT, db_column='id_upd')
     status = models.CharField(
         max_length=30, choices=STATUS_CHOICES, default='created')
     id_driver = models.ForeignKey(
         Driver, on_delete=models.SET_NULL, null=True, blank=True, db_column='id_driver')
     vehicle_license_plate = models.ForeignKey(
         Vehicle, on_delete=models.SET_NULL, null=True, blank=True, db_column='vehicle_license_plate', to_field='license_plate')
-    loading_date = models.DateTimeField(
-        null=True, blank=True)  # Дата и время погрузки
-    arrival_to_client_date = models.DateTimeField(
-        null=True, blank=True)  # Дата и время прибытия к клиенту
+    loading_date = models.DateTimeField(null=True, blank=True)
+    arrival_to_client_date = models.DateTimeField(null=True, blank=True)
 
     class Meta:
         db_table = 'delivery_request'

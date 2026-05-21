@@ -10,8 +10,8 @@ class UserSerializer(serializers.ModelSerializer):
     """Сериализатор для модели User"""
     class Meta:
         model = User
-        fields = ('id_user', 'last_name', 'first_name',
-                  'middle_name', 'role', 'phone', 'email', 'is_active')
+        fields = ('id', 'last_name', 'first_name', 'middle_name',
+                  'role', 'phone', 'email', 'is_active')
 
 
 class DriverSerializer(serializers.ModelSerializer):
@@ -25,7 +25,7 @@ class DriverSerializer(serializers.ModelSerializer):
     def get_user_details(self, obj):
         """Получение данных пользователя, связанного с водителем"""
         return {
-            'id_user': obj.id_user.id_user,
+            'id': obj.id_user.id,
             'last_name': obj.id_user.last_name,
             'first_name': obj.id_user.first_name,
             'phone': obj.id_user.phone,

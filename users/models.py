@@ -1,9 +1,17 @@
+"""
+Модели приложения users.
+Соответствует инфологической модели: таблицы Пользователь, Водитель, Менеджер, Диспетчер
+"""
+
 from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin, BaseUserManager
 
 
 class UserManager(BaseUserManager):
+    """Менеджер для кастомной модели пользователя"""
+
     def create_user(self, phone, password=None, **extra_fields):
+        """Создание обычного пользователя"""
         if not phone:
             raise ValueError('Телефон обязателен')
         user = self.model(phone=phone, **extra_fields)
@@ -12,6 +20,7 @@ class UserManager(BaseUserManager):
         return user
 
     def create_superuser(self, phone, password=None, **extra_fields):
+        """Создание суперпользователя (администратора)"""
         extra_fields.setdefault('is_staff', True)
         extra_fields.setdefault('is_superuser', True)
         extra_fields.setdefault('is_active', 1)
@@ -26,6 +35,11 @@ class UserManager(BaseUserManager):
 
 
 class User(AbstractBaseUser, PermissionsMixin):
+    """
+    Кастомная модель пользователя.
+    Аутентификация по телефону вместо email/username.
+    """
+
     ROLE_CHOICES = [
         ('driver', 'Водитель'),
         ('manager', 'Менеджер'),
@@ -33,8 +47,7 @@ class User(AbstractBaseUser, PermissionsMixin):
         ('admin', 'Администратор'),
     ]
 
-    id_user = models.AutoField(
-        primary_key=True, verbose_name='ID пользователя')
+    id = models.AutoField(primary_key=True, verbose_name='ID пользователя')
     last_name = models.CharField(max_length=255, verbose_name='Фамилия')
     first_name = models.CharField(max_length=255, verbose_name='Имя')
     middle_name = models.CharField(
@@ -66,6 +79,10 @@ class User(AbstractBaseUser, PermissionsMixin):
 
 
 class Driver(models.Model):
+    """
+    Модель водителя (расширение пользователя с ролью driver).
+    Связь 1:1 с User.
+    """
     id_driver = models.AutoField(primary_key=True)
     id_user = models.OneToOneField(
         User, on_delete=models.CASCADE, db_column='id_user')
@@ -80,6 +97,10 @@ class Driver(models.Model):
 
 
 class Manager(models.Model):
+    """
+    Модель менеджера (расширение пользователя с ролью manager).
+    Связь 1:1 с User.
+    """
     id_manager = models.OneToOneField(
         User, on_delete=models.CASCADE, primary_key=True, db_column='id_manager')
     department_name = models.CharField(
@@ -90,6 +111,10 @@ class Manager(models.Model):
 
 
 class Dispatcher(models.Model):
+    """
+    Модель диспетчера (расширение пользователя с ролью dispatcher).
+    Связь 1:1 с User.
+    """
     SHIFT_CHOICES = [
         ('morning', 'Утро'),
         ('evening', 'Вечер'),
