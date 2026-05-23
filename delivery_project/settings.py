@@ -79,12 +79,8 @@ WSGI_APPLICATION = 'delivery_project.wsgi.application'
 # База данных (SQLite для прототипа)
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'delivery_db',
-        'USER': 'postgres',
-        'PASSWORD': 'postgres123',
-        'HOST': 'postgres',
-        'PORT': '5433',
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',
     }
 }
 

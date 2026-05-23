@@ -89,3 +89,17 @@ class CurrentUserViewSet(viewsets.ViewSet):
         """Возвращает данные текущего пользователя"""
         serializer = UserSerializer(request.user)
         return Response(serializer.data)
+
+
+class AdminDriverViewSet(viewsets.ModelViewSet):
+    """
+    Управление водителями (только для администратора).
+    """
+    queryset = Driver.objects.all()
+    serializer_class = DriverSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_permissions(self):
+        if self.request.user.role != 'admin':
+            self.permission_classes = [permissions.IsAuthenticated]
+        return super().get_permissions()

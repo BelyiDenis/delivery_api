@@ -1,6 +1,8 @@
+version: '3.8'
+
 services:
   postgres:
-    build: ./postgres
+    image: postgres:15
     container_name: delivery_postgres
     environment:
       POSTGRES_DB: delivery_db
@@ -9,7 +11,7 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
     ports:
-      - "5433:5432"
+      - "5432:5432"   # внутренний порт 5432
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 10s
@@ -25,7 +27,7 @@ services:
       DB_USER: postgres
       DB_PASSWORD: postgres123
       DB_HOST: postgres
-      DB_PORT: '5432'
+      DB_PORT: '5433'
     volumes:
       - static_files:/app/static
       - media_files:/app/media
@@ -43,7 +45,7 @@ services:
       - media_files:/media
     ports:
       - "80:80"
-      - "443:443"
+      - "5433:5432"
     depends_on:
       - django-api
 

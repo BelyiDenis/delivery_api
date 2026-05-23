@@ -155,10 +155,14 @@ class DeliveryRequestViewSet(viewsets.ModelViewSet):
         # Проверка наличия подписей
         from signatures.models import ElectronicSignature
         has_driver_sig = ElectronicSignature.objects.filter(
-            id_delivery_request=delivery, signer_type='driver', verification_status='success'
+            id_delivery_request_id=delivery.id_delivery_request,
+            signer_type='driver',
+            verification_status='success'
         ).exists()
         has_client_sig = ElectronicSignature.objects.filter(
-            id_delivery_request=delivery, signer_type='client', verification_status='success'
+            id_delivery_request_id=delivery.id_delivery_request,
+            signer_type='client',
+            verification_status='success'
         ).exists()
 
         if not has_driver_sig or not has_client_sig:
@@ -167,7 +171,7 @@ class DeliveryRequestViewSet(viewsets.ModelViewSet):
 
         # Проверка наличия фото
         from photos.models import ProductPhoto
-        if not ProductPhoto.objects.filter(id_delivery_request=delivery).exists():
+        if not ProductPhoto.objects.filter(id_delivery_request_id=delivery.id_delivery_request).exists():
             return Response({'error': 'Отсутствуют фото груза'},
                             status=status.HTTP_400_BAD_REQUEST)
 
